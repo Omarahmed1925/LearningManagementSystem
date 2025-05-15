@@ -106,4 +106,11 @@ public class CourseController {
         }
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Course>> searchCourses(@RequestParam String keyword) {
+        List<Course> results = courseService.searchCourses(keyword);
+        return new ResponseEntity<>(results, HttpStatus.OK);
+    }
+
+
 }

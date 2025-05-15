@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static com.lms.LearningManagementSystem.Service.UserService.UserService.userStore;
 
@@ -160,6 +161,20 @@ public class CourseService {
             return true;
         }
         return false;
+    }
+
+
+    //Add new Feture to the code Look at Jira
+    public List<Course> searchCourses(String keyword) {
+        String lowerKeyword = keyword.toLowerCase();
+        return courses.stream()
+                .filter(course ->
+                        course.getTitle().toLowerCase().contains(lowerKeyword) ||
+                                course.getDescription().toLowerCase().contains(lowerKeyword) ||
+                                (course.getInstructor() != null &&
+                                        course.getInstructor().getName().toLowerCase().contains(lowerKeyword))
+                )
+                .collect(Collectors.toList());
     }
 
 }
