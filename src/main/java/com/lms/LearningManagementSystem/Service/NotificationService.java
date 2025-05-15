@@ -51,4 +51,9 @@ public class NotificationService {
             user.addNotification(new Notification(generateId(), message));
         }
     }
+
+    // Added Function to solve the Postman bug for the return 200 o even when the notification array is empty
+    public List<Notification> getUnread(Long userId) {
+        return getNotifications(userId, true);
+    }
 }
