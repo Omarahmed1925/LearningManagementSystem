@@ -10,14 +10,15 @@ import java.util.List;
 @Setter
 @Getter
 public class Course {
+
     private String id;
     private String title;
     private String description;
-    private int duration; // in hours
+    private int duration;
     private List<String> mediaFiles;
     private List<Lesson> lessons = new ArrayList<>();
     private List<Long> enrolledStudents;
-    private Instructor instructor; // Link to the instructor
+    private Instructor instructor;
 
     public Course(Long adminId, String id, String title, String description, int duration) {
         this.id = id;
@@ -28,8 +29,4 @@ public class Course {
         this.lessons = new ArrayList<>();
         this.enrolledStudents = new ArrayList<>();
     }
-
 }
-
-
-

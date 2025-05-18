@@ -12,21 +12,22 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/Assessments")
 public class AssessmentController {
-
-    // Create Quiz
     @PostMapping("/{InstructorId}/quiz")
-    public ResponseEntity<?> createQuiz(@PathVariable Long InstructorId,@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Object> createQuiz(@PathVariable Long InstructorId, @RequestBody Map<String, Object> payload) {
         try {
             String title = (String) payload.get("title");
             int totalMarks = (int) payload.get("totalMarks");
             int num = (int) payload.get("num");
+
             Quiz quiz = InstructorService.createQuiz(InstructorId, title, num, totalMarks);
             return new ResponseEntity<>(quiz, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Operation failed: You are not an Instructor.", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-
     }
+
+
+
     @PostMapping("/quiz/{quizId}/submit")
     public ResponseEntity<?> submitQuizAnswers(@PathVariable Long quizId, @RequestBody Map<String, Object> payload) {
         // Check if the quiz exists
@@ -75,7 +76,7 @@ public class AssessmentController {
         }
         return new ResponseEntity<>(quiz, HttpStatus.OK);
     }
-    
+
     @GetMapping("/{InstructorId}/questions")
     public  ResponseEntity<?> getAllQuestions(@PathVariable Long InstructorId) {
         try {
@@ -195,5 +196,5 @@ public class AssessmentController {
         }
     }
 
- 
+
 }

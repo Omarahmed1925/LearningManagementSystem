@@ -6,14 +6,19 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents a lesson within a course.
+ * Each lesson tracks its own attendance map and has a unique ID.
+ */
 @Setter
 @Getter
 public class Lesson {
+
     private String id;
     private String title;
     private String content;
     private String otp;
-    private Map<String, Boolean> attendance; // Tracks student attendance
+    private Map<String, Boolean> attendance;
 
     public Lesson(String id, String title, String content) {
         this.id = id;

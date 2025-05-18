@@ -22,9 +22,10 @@ public class AdminService extends UserService {
         return courseService.updateCourse( AdminId,courseId, title, description, duration);
     }
 
-    public static boolean deleteCourse(Long AdminId,String courseId) {
+    public static void deleteCourse(Long adminId, String courseId) {
         Course course = courseService.findCourseById(courseId);
-        return courseService.deleteCourse(AdminId,courseId);
+        courseService.deleteCourse(adminId, courseId); // no return
     }
+
 
 }

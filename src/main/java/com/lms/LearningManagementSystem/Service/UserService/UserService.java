@@ -53,24 +53,22 @@ public class UserService {
         return null; // Invalid credentials
     }
 
-    // Add a new user
     public User addUser(User user) {
-        // Validate and set role
         if (user.getRole() == null || user.getRole().isEmpty()) {
             throw new IllegalArgumentException("User role is required");
         }
 
+        for (User existingUser : userStore.values()) {
+            if (existingUser.getEmail().equalsIgnoreCase(user.getEmail())) {
+                throw new IllegalArgumentException("User already exists with the same email. Please register using another email.");
+            }
+        }
+
         User newUser;
         switch (user.getRole().toLowerCase()) {
-            case "admin":
-                newUser = new Admin();
-                break;
-            case "instructor":
-                newUser = new Instructor();
-                break;
-            case "student":
-                newUser = new Student();
-                break;
+            case "admin": newUser = new Admin(); break;
+            case "instructor": newUser = new Instructor(); break;
+            case "student": newUser = new Student(); break;
             default:
                 throw new IllegalArgumentException("Invalid role. Valid roles are Admin, Instructor, and Student.");
         }
@@ -85,6 +83,7 @@ public class UserService {
         return newUser;
     }
 
+
     // Update an existing user
     public User updateUser(User updateUser, Long id) {
         if (userStore.containsKey(id)) {
@@ -95,10 +94,13 @@ public class UserService {
         return null;
     }
 
-    // Delete a user by ID
     public void deleteUser(Long id) {
+        if (!userStore.containsKey(id)) {
+            throw new IllegalArgumentException("User with ID " + id + " does not exist.");
+        }
         userStore.remove(id);
     }
+
 
     public ArrayList<User> listUsers(String role) {
         // Start with all users
@@ -130,6 +132,7 @@ public class UserService {
 
         return filteredUsers;
     }
+
 
 
 }

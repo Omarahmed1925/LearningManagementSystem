@@ -55,13 +55,13 @@ public class InstructorService extends UserService {
         if (user == null || !(user instanceof Instructor)) {
             throw new IllegalArgumentException("User is not an instructor .");
         }
-            return courseService.generateOtp(courseId, lessonId);
+        return courseService.generateOtp(courseId, lessonId);
     }
 
-    public static Quiz createQuiz(Long instructorId,String title, int num, int totalMarks) {
+    public static Quiz createQuiz(Long instructorId, String title, int num, int totalMarks) {
         User user = userStore.get(instructorId);
-        if (user == null || !(user instanceof Instructor)) {
-            throw new IllegalArgumentException("User is not an instructor .");
+        if (user == null || !"INSTRUCTOR".equalsIgnoreCase(user.getRole())) {
+            throw new IllegalArgumentException("Only instructors can create quizzes.");
         }
         return assessmentService.createQuiz(title, num, totalMarks);
     }
@@ -77,11 +77,11 @@ public class InstructorService extends UserService {
         }
         assessmentService.addQuestions(questions); }
 
-     public static List<Question> GetQuestions(Long instructorId) {
-         User user = userStore.get(instructorId);
-         if (user == null || !(user instanceof Instructor)) {
-             throw new IllegalArgumentException("User is not an instructor .");
-         }
+    public static List<Question> GetQuestions(Long instructorId) {
+        User user = userStore.get(instructorId);
+        if (user == null || !(user instanceof Instructor)) {
+            throw new IllegalArgumentException("User is not an instructor .");
+        }
 
         return assessmentService.GetQuestions();
     }

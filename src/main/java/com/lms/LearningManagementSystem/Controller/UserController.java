@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,14 +32,15 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
+    public ResponseEntity<Object> registerUser(@RequestBody User user) {
         try {
             User createdUser = userService.addUser(user);
             return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -56,9 +58,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
-
-        userService.deleteUser(id);
+    public ResponseEntity<Object> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return new ResponseEntity<>(Map.of("message", "User deleted successfully"), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/list")
