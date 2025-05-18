@@ -18,7 +18,9 @@ import static com.lms.LearningManagementSystem.Service.UserService.UserService.u
 
 @Service
 public class CourseService {
-    private final AtomicLong idGenerator = new AtomicLong(1);
+
+    private final AtomicLong courseIdGenerator = new AtomicLong(1);   // 🆕 For Course IDs
+    private final AtomicLong lessonIdGenerator = new AtomicLong(1);   // 🆕 For Lesson IDs
     private final List<Course> courses = new ArrayList<>();
     private final NotificationService notificationService;
 
@@ -27,18 +29,21 @@ public class CourseService {
         this.notificationService = notificationService;
     }
 
-    private String generateId() {
-        return String.valueOf(idGenerator.getAndIncrement());
+    private String generateCourseId() {
+        return "COURSE-" + courseIdGenerator.getAndIncrement();
     }
 
-    public Course createCourse(Long AdminId,String title, String description, int duration) {
-        // Check if the user exists and is an admin
-        User user = userStore.get(AdminId);
+    private String generateLessonId() {
+        return "LESSON-" + lessonIdGenerator.getAndIncrement();
+    }
+
+    public Course createCourse(Long adminId, String title, String description, int duration) {
+        User user = userStore.get(adminId);
         if (user == null || !(user instanceof Admin)) {
             throw new IllegalArgumentException("Only admins can create courses.");
         }
-        String courseId = generateId();
-        Course course = new Course(AdminId,courseId, title, description, duration);
+        String courseId = generateCourseId();
+        Course course = new Course(adminId, courseId, title, description, duration);
         courses.add(course);
         return course;
     }
@@ -62,7 +67,7 @@ public class CourseService {
     public Lesson addLesson(String courseId, String title, String content) {
         Course course = findCourseById(courseId);
         if (course != null) {
-            String lessonId = generateId();
+            String lessonId = generateLessonId();
             Lesson lesson = new Lesson(lessonId, title, content);
             course.getLessons().add(lesson);
             return lesson;
@@ -99,14 +104,17 @@ public class CourseService {
 
     public Map<String, Boolean> getLessonAttendance(String courseId, String lessonId) {
         Course course = findCourseById(courseId);
-        if (course != null) {
-            for (Lesson lesson : course.getLessons()) {
-                if (lesson.getId().equals(lessonId)) {
-                    return lesson.getAttendance();
-                }
+        if (course == null) {
+            throw new IllegalArgumentException("Course with ID " + courseId + " not found.");
+        }
+
+        for (Lesson lesson : course.getLessons()) {
+            if (lesson.getId().equals(lessonId)) {
+                return lesson.getAttendance();
             }
         }
-        return null;
+
+        throw new IllegalArgumentException("Lesson with ID " + lessonId + " not found in course " + courseId + ".");
     }
 
     public List<Course> getAllCourses() {
@@ -118,12 +126,12 @@ public class CourseService {
         return course != null ? course.getEnrolledStudents() : null;
     }
 
-    public Course updateCourse(Long AdminId,String courseId, String title, String description, int duration) {
-        // Check if the user exists and is an admin
-        User user = userStore.get(AdminId);
+    public Course updateCourse(Long adminId, String courseId, String title, String description, int duration) {
+        User user = userStore.get(adminId);
         if (user == null || !(user instanceof Admin)) {
-            throw new IllegalArgumentException("Only admins can create courses.");
+            throw new IllegalArgumentException("Only admins can update courses.");
         }
+
         Course course = findCourseById(courseId);
         if (course != null) {
             course.setTitle(title);
@@ -139,42 +147,53 @@ public class CourseService {
         return null;
     }
 
-    public boolean deleteCourse(Long AdminId,String courseId) {
-        // Check if the user exists and is an admin
-        User user = userStore.get(AdminId);
+    public void deleteCourse(Long adminId, String courseId) {
+        User user = userStore.get(adminId);
         if (user == null || !(user instanceof Admin)) {
-            throw new IllegalArgumentException("Only admins can create courses.");
+            throw new IllegalArgumentException("Only admins can delete courses.");
         }
+
         Course course = findCourseById(courseId);
-        if (course != null) {
-            for (Long studentId : course.getEnrolledStudents()) {
-                notificationService.notifyUser(studentId,
-                        "The course " + course.getTitle() + " has been deleted.");
-            }
-
-            if (course.getInstructor() != null) {
-                notificationService.notifyUser(course.getInstructor().getId(),
-                        "The course " + course.getTitle() + " you were assigned to teach has been deleted.");
-            }
-
-            courses.remove(course);
-            return true;
+        if (course == null) {
+            throw new IllegalArgumentException("Course with ID " + courseId + " does not exist.");
         }
-        return false;
+
+        for (Long studentId : course.getEnrolledStudents()) {
+            notificationService.notifyUser(studentId,
+                    "The course " + course.getTitle() + " has been deleted.");
+        }
+
+        if (course.getInstructor() != null) {
+            notificationService.notifyUser(course.getInstructor().getId(),
+                    "The course " + course.getTitle() + " you were assigned to teach has been deleted.");
+        }
+
+        courses.remove(course);
+    }
+    public boolean bookmarkCourse(Long studentId, String courseId) {
+        User user = userStore.get(studentId);
+        Course course = findCourseById(courseId);
+
+        if (user == null || !(user.getRole().equalsIgnoreCase("student"))) {
+            throw new IllegalArgumentException("Only students can bookmark courses.");
+        }
+        if (course == null) {
+            throw new IllegalArgumentException("Course not found.");
+        }
+
+        return user.getBookmarkedCourses().add(courseId);
     }
 
+    public Set<Course> getBookmarkedCourses(Long studentId) {
+        User user = userStore.get(studentId);
+        if (user == null || !(user.getRole().equalsIgnoreCase("student"))) {
+            throw new IllegalArgumentException("Student not found.");
+        }
 
-    //Add new Feture to the code Look at Jira
-    public List<Course> searchCourses(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return courses.stream()
-                .filter(course ->
-                        course.getTitle().toLowerCase().contains(lowerKeyword) ||
-                                course.getDescription().toLowerCase().contains(lowerKeyword) ||
-                                (course.getInstructor() != null &&
-                                        course.getInstructor().getName().toLowerCase().contains(lowerKeyword))
-                )
-                .collect(Collectors.toList());
+        return user.getBookmarkedCourses().stream()
+                .map(this::findCourseById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
 }

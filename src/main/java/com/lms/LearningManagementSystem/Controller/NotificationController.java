@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/notifications")
@@ -21,17 +22,27 @@ public class NotificationController {
     public List<Notification> getNotifications(@PathVariable Long userId, @RequestParam(defaultValue = "false") boolean onlyUnread) {
         return notificationService.getNotifications(userId, onlyUnread);
     }
+
     @PostMapping("/{userId}/{notificationId}/read")
-    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long userId, @PathVariable String notificationId) {
-        List<Notification> notifications = notificationService.getUnread(userId);
+    public ResponseEntity<Object> markNotificationAsRead(
+            @PathVariable Long userId,
+            @PathVariable String notificationId) {
 
-        if (notifications.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No unread notifications found.");
+        int result = notificationService.markNotificationAsRead(userId, notificationId);
+
+        switch (result) {
+            case 1:
+                return ResponseEntity.ok(Map.of("message", "Notification marked as read."));
+            case 0:
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "No notifications found for this user."));
+            case -1:
+            default:
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found."));
         }
-
-        notificationService.markNotificationAsRead(userId, notificationId);
-        return ResponseEntity.ok("Notification marked as read.");
     }
+
 
 }
 

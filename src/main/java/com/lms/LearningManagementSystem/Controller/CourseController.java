@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/courses")
@@ -52,17 +53,13 @@ public class CourseController {
         }
     }
     // Delete a course
-    @DeleteMapping("/{AdminId}/{courseId}/delete")
-    public ResponseEntity<String> deleteCourse(@PathVariable String courseId,@PathVariable Long AdminId) {
+    @DeleteMapping("/{adminId}/{courseId}/delete")
+    public ResponseEntity<String> deleteCourse(@PathVariable String courseId, @PathVariable Long adminId) {
         try {
-            boolean isDeleted = AdminService.deleteCourse(AdminId,courseId);
-            if (isDeleted) {
-                return ResponseEntity.ok("Course deleted successfully.");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found.");
-            }
+            AdminService.deleteCourse(adminId, courseId);
+            return ResponseEntity.ok("Course deleted successfully.");
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Operation failed: You are not an admin.", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Operation failed: " + e.getMessage());
         }
     }
 
@@ -81,9 +78,16 @@ public class CourseController {
 
     // View attendance for a lesson
     @GetMapping("/{courseId}/lessons/{lessonId}/attendance")
-    public Map<String, Boolean> getLessonAttendance(@PathVariable String courseId, @PathVariable String lessonId) {
-        return courseService.getLessonAttendance(courseId, lessonId);
+    public ResponseEntity<Object> getLessonAttendance(@PathVariable String courseId, @PathVariable String lessonId) {
+        try {
+            Map<String, Boolean> attendance = courseService.getLessonAttendance(courseId, lessonId);
+            return ResponseEntity.ok(attendance);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
+
 
     // View all courses
     @GetMapping
@@ -105,11 +109,28 @@ public class CourseController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
         }
     }
+    @PostMapping("/{studentId}/bookmark/{courseId}")
+    public ResponseEntity<Object> bookmarkCourse(@PathVariable Long studentId, @PathVariable String courseId) {
+        try {
+            boolean added = courseService.bookmarkCourse(studentId, courseId);
+            if (added) {
+                return ResponseEntity.ok(Map.of("message", "Course bookmarked."));
+            } else {
+                return ResponseEntity.ok(Map.of("message", "Course already bookmarked."));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<Course>> searchCourses(@RequestParam String keyword) {
-        List<Course> results = courseService.searchCourses(keyword);
-        return new ResponseEntity<>(results, HttpStatus.OK);
+    @GetMapping("/{studentId}/bookmarks")
+    public ResponseEntity<Object> getBookmarkedCourses(@PathVariable Long studentId) {
+        try {
+            Set<Course> bookmarks = courseService.getBookmarkedCourses(studentId);
+            return ResponseEntity.ok(bookmarks);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
 
