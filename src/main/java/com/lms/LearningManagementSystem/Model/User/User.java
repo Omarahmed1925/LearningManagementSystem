@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -18,6 +20,9 @@ public class User {
 
     @Getter
     private List<Notification> notifications = new ArrayList<>();
+    @Getter
+    private Set<String> bookmarkedCourses = new HashSet<>();
+
 
     // Common methods for all users
     public void viewProfile() {
