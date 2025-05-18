@@ -1,8 +1,7 @@
 package com.lms.LearningManagementSystem.Service;
 
 import com.lms.LearningManagementSystem.Model.User.Admin;
-import com.lms.LearningManagementSystem.Model.User.Instructor;
-import com.lms.LearningManagementSystem.Model.Notification;
+
 import com.lms.LearningManagementSystem.Model.Course;
 import com.lms.LearningManagementSystem.Model.Lesson;
 import com.lms.LearningManagementSystem.Model.User.User;
@@ -195,5 +194,19 @@ public class CourseService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
+
+    public List<Course> searchCourses(String keyword) {
+        String lowerKeyword = keyword.toLowerCase();
+        return courses.stream()
+                .filter(course ->
+                        course.getTitle().toLowerCase().contains(lowerKeyword) ||
+                                course.getDescription().toLowerCase().contains(lowerKeyword) ||
+                                (course.getInstructor() != null &&
+                                        course.getInstructor().getName().toLowerCase().contains(lowerKeyword))
+                )
+                .collect(Collectors.toList());
+    }
+
+
 
 }

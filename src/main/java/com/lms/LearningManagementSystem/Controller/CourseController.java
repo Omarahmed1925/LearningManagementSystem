@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/courses")
@@ -132,6 +133,14 @@ public class CourseController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    //Add new Feture to the code Look at Jira
+    @GetMapping("/search")
+    public ResponseEntity<List<Course>> searchCourses(@RequestParam String keyword) {
+        List<Course> results = courseService.searchCourses(keyword);
+        return ResponseEntity.ok(results);
+    }
+
 
 
 }

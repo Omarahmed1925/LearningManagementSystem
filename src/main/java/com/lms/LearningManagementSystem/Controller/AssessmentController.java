@@ -80,15 +80,12 @@ public class AssessmentController {
     @GetMapping("/{InstructorId}/questions")
     public  ResponseEntity<?> getAllQuestions(@PathVariable Long InstructorId) {
         try {
-            // Fetch questions for the instructor
             List<Question> questions = InstructorService.GetQuestions(InstructorId);
 
-            // Return the questions if the operation succeeds
             return new ResponseEntity<>(questions, HttpStatus.OK);
 
         }
         catch (IllegalArgumentException e) {
-            // Handle known errors like invalid instructor ID
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 
         }
@@ -99,11 +96,9 @@ public class AssessmentController {
         return StudentService.GetAllquizzes();
     }
 
-    // Create Assignment
     @PostMapping("/{InstructorId}/assignment")
     public ResponseEntity<?> createAssignment(@PathVariable Long InstructorId,@RequestBody Map<String, Object> payload) {
         try {
-            // Extract title and description from payload
             String title = (String) payload.get("title");
             String description = (String) payload.get("description");
             if (title == null || title.isEmpty() || description == null || description.isEmpty()) {
@@ -120,7 +115,6 @@ public class AssessmentController {
         }
     }
 
-    // Submit Assignment
     @PostMapping("/assignment/{assignmentId}/submit")
     public ResponseEntity<?> submitAssignment(@PathVariable Long assignmentId, @RequestBody Map<String, Object> payload) {
         try {
