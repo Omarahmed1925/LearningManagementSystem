@@ -16,6 +16,15 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
+    private static final String ERROR_KEY = "error";
+    private static final String MESSAGE_KEY = "message";
+    private static final String ADMIN_ERROR_MESSAGE = "Operation failed: You are not an admin.";
+    private static final String COURSE_BOOKMARKED = "Course bookmarked.";
+    private static final String COURSE_ALREADY_BOOKMARKED = "Course already bookmarked.";
+    private static final String MEDIA_ADD_SUCCESS = "Media file added successfully.";
+    private static final String MEDIA_ADD_FAILURE = "Failed to add media file.";
+    private static final String COURSE_DELETED = "Course deleted successfully.";
+
     private final CourseService courseService;
 
     public CourseController(CourseService courseService) {
@@ -34,7 +43,7 @@ public class CourseController {
             Course course = AdminService.createCourse(AdminId,title, description, duration);
             return new ResponseEntity<>(course, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Operation failed: You are not an admin.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ADMIN_ERROR_MESSAGE, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -50,15 +59,16 @@ public class CourseController {
             Course updatedCourse = AdminService.updateCourse(AdminId ,courseId, title, description, duration);
             return ResponseEntity.ok(updatedCourse);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Operation failed: You are not an admin.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ADMIN_ERROR_MESSAGE, HttpStatus.BAD_REQUEST);
         }
     }
+
     // Delete a course
     @DeleteMapping("/{adminId}/{courseId}/delete")
     public ResponseEntity<String> deleteCourse(@PathVariable String courseId, @PathVariable Long adminId) {
         try {
             AdminService.deleteCourse(adminId, courseId);
-            return ResponseEntity.ok("Course deleted successfully.");
+            return ResponseEntity.ok(COURSE_DELETED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Operation failed: " + e.getMessage());
         }
@@ -68,7 +78,7 @@ public class CourseController {
     @PostMapping("/{courseId}/media")
     public String addMediaFile(@PathVariable String courseId, @RequestParam String mediaFile) {
         boolean success = courseService.addMediaFile(courseId, mediaFile);
-        return success ? "Media file added successfully." : "Failed to add media file.";
+        return success ? MEDIA_ADD_SUCCESS : MEDIA_ADD_FAILURE;
     }
 
     // Add a lesson to a course
@@ -85,10 +95,9 @@ public class CourseController {
             return ResponseEntity.ok(attendance);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
-
 
     // View all courses
     @GetMapping
@@ -101,26 +110,28 @@ public class CourseController {
     public List<Long> getEnrolledStudents(@PathVariable String courseId) {
         return courseService.getEnrolledStudents(courseId);
     }
+
     @GetMapping("/{courseId}")
     public Course getCourseById(@PathVariable String courseId) {
         Course course = courseService.findCourseById(courseId);
         if (course != null) {
-            return course; // This will include the lessons because they're part of the course object
+            return course;
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
         }
     }
+
     @PostMapping("/{studentId}/bookmark/{courseId}")
     public ResponseEntity<Object> bookmarkCourse(@PathVariable Long studentId, @PathVariable String courseId) {
         try {
             boolean added = courseService.bookmarkCourse(studentId, courseId);
             if (added) {
-                return ResponseEntity.ok(Map.of("message", "Course bookmarked."));
+                return ResponseEntity.ok(Map.of(MESSAGE_KEY, COURSE_BOOKMARKED));
             } else {
-                return ResponseEntity.ok(Map.of("message", "Course already bookmarked."));
+                return ResponseEntity.ok(Map.of(MESSAGE_KEY, COURSE_ALREADY_BOOKMARKED));
             }
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -130,17 +141,13 @@ public class CourseController {
             Set<Course> bookmarks = courseService.getBookmarkedCourses(studentId);
             return ResponseEntity.ok(bookmarks);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
-    //Add new Feture to the code Look at Jira
     @GetMapping("/search")
     public ResponseEntity<List<Course>> searchCourses(@RequestParam String keyword) {
         List<Course> results = courseService.searchCourses(keyword);
         return ResponseEntity.ok(results);
     }
-
-
-
 }

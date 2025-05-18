@@ -12,12 +12,22 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/Assessments")
 public class AssessmentController {
+    private static final String STUDENT_ID_KEY = "studentId";
+    private static final String TITLE_KEY = "title";
+    private static final String TOTAL_MARKS_KEY = "totalMarks";
+    private static final String NUM_QUESTIONS_KEY = "num";
+    private static final String ANSWERS_KEY = "answers";
+    private static final String DESCRIPTION_KEY = "description";
+    private static final String FILE_NAME_KEY = "fileName";
+    private static final String MARKS_KEY = "marks";
+    private static final String FEEDBACK_KEY = "feedback";
+
     @PostMapping("/{InstructorId}/quiz")
     public ResponseEntity<Object> createQuiz(@PathVariable Long InstructorId, @RequestBody Map<String, Object> payload) {
         try {
-            String title = (String) payload.get("title");
-            int totalMarks = (int) payload.get("totalMarks");
-            int num = (int) payload.get("num");
+            String title = (String) payload.get(TITLE_KEY);
+            int totalMarks = (int) payload.get(TOTAL_MARKS_KEY);
+            int num = (int) payload.get(NUM_QUESTIONS_KEY);
 
             Quiz quiz = InstructorService.createQuiz(InstructorId, title, num, totalMarks);
             return new ResponseEntity<>(quiz, HttpStatus.CREATED);
@@ -25,8 +35,6 @@ public class AssessmentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
-
 
     @PostMapping("/quiz/{quizId}/submit")
     public ResponseEntity<?> submitQuizAnswers(@PathVariable Long quizId, @RequestBody Map<String, Object> payload) {
@@ -36,8 +44,8 @@ public class AssessmentController {
             if (quiz == null) {
                 return new ResponseEntity<>("Quiz not found", HttpStatus.NOT_FOUND); // Return 404 if quiz not found
             }
-            Long studentId = ((Number) payload.get("studentId")).longValue();
-            Map<String, String> submission = (Map<String, String>) payload.get("answers");
+            Long studentId = ((Number) payload.get(STUDENT_ID_KEY)).longValue();
+            Map<String, String> submission = (Map<String, String>) payload.get(ANSWERS_KEY);
 
             // Process submission
             StudentService.SubmitQuiz(studentId, quizId, submission);
@@ -47,7 +55,6 @@ public class AssessmentController {
         catch (IllegalArgumentException e) {
             // Handle known errors like invalid student or other validations
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-
         }
     }
 
@@ -99,8 +106,8 @@ public class AssessmentController {
     @PostMapping("/{InstructorId}/assignment")
     public ResponseEntity<?> createAssignment(@PathVariable Long InstructorId,@RequestBody Map<String, Object> payload) {
         try {
-            String title = (String) payload.get("title");
-            String description = (String) payload.get("description");
+            String title = (String) payload.get(TITLE_KEY);
+            String description = (String) payload.get(DESCRIPTION_KEY);
             if (title == null || title.isEmpty() || description == null || description.isEmpty()) {
                 return new ResponseEntity<>("Title and description must be provided.", HttpStatus.BAD_REQUEST);
             }
@@ -125,12 +132,12 @@ public class AssessmentController {
             }
 
             // Extract fileName and studentId from the payload
-            String fileName = (String) payload.get("fileName");
+            String fileName = (String) payload.get(FILE_NAME_KEY);
             if (fileName == null || fileName.isEmpty()) {
                 return new ResponseEntity<>("File name must be provided.", HttpStatus.BAD_REQUEST);
             }
 
-            Long studentId = ((Number) payload.get("StudentID")).longValue();
+            Long studentId = ((Number) payload.get(STUDENT_ID_KEY)).longValue();
             if (studentId == null) {
                 return new ResponseEntity<>("Student ID must be provided.", HttpStatus.BAD_REQUEST);
             }
@@ -143,7 +150,6 @@ public class AssessmentController {
         catch (IllegalArgumentException e) {
             // Handle known validation errors
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-
         }
     }
 
@@ -168,15 +174,15 @@ public class AssessmentController {
     public ResponseEntity<String> gradeAssignment(@PathVariable Long InstructorId,@RequestBody Map<String, Object> payload) {
         try {
             // Extract and validate inputs
-            Long studentId = payload.get("studentId") != null ? ((Number) payload.get("studentId")).longValue() : null;
+            Long studentId = payload.get(STUDENT_ID_KEY) != null ? ((Number) payload.get(STUDENT_ID_KEY)).longValue() : null;
             if (studentId == null) {
                 return new ResponseEntity<>("Student ID must be provided.", HttpStatus.BAD_REQUEST);
             }
-            String marks = (String) payload.get("marks");
+            String marks = (String) payload.get(MARKS_KEY);
             if (marks == null || marks.isEmpty()) {
                 return new ResponseEntity<>("Marks must be provided.", HttpStatus.BAD_REQUEST);
             }
-            String feedback = (String) payload.get("feedback");
+            String feedback = (String) payload.get(FEEDBACK_KEY);
             if (feedback == null || feedback.isEmpty()) {
                 return new ResponseEntity<>("Feedback must be provided.", HttpStatus.BAD_REQUEST);
             }
@@ -186,7 +192,6 @@ public class AssessmentController {
         } catch (IllegalArgumentException e) {
             // Handle known validation errors
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-
         }
     }
 

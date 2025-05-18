@@ -20,7 +20,7 @@ public class Course {
     private List<Long> enrolledStudents;
     private Instructor instructor;
 
-    public Course(Long adminId, String id, String title, String description, int duration) {
+    public Course(String id, String title, String description, int duration) {
         this.id = id;
         this.title = title;
         this.description = description;
